@@ -1,0 +1,40 @@
+module main:
+
+% Interface Inputs
+input On, Off;
+input Resume;
+input Set;
+
+input QuickDecel, QuickAccel;
+input Accel, Brake, Speed : float;
+
+% Interface Outputs
+output CruiseSpeed : float;
+output ThrottleCmd : float;
+output CruiseState : integer; % Should later be an enum?
+
+% Declare Signals to map between each submodules
+
+%Instantiate all sub models and map inputs and outputs between
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+end module
+
+
+module Cruise
