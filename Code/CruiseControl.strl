@@ -11,7 +11,7 @@ input Accel, Brake, Speed : float;
 % Interface Outputs
 output CruiseSpeed : float;
 output ThrottleCmd : float;
-output CruiseState : integer; % Should later be an enum?
+output CruiseState : integer; % Should later be an enum, not sure how to use enum in strl?
 
 % Declare Signals to map between each submodules
 
@@ -19,22 +19,58 @@ output CruiseState : integer; % Should later be an enum?
 
 
 
+end module
 
+%Controls the state of the cruise controller
+module CruisStateController:
 
+loop
 
+end loop
+end module
 
+%Controls the Driving speed
+module DrivingControl:
 
+loop
 
+end loop
+end module
 
+%Contorls the Cruise Speed
+module CruiseSpeed:
 
+loop 
 
+end loop
+end module
 
+%Detects the pedals
+module PedalDetection:
 
+loop 
 
-
-
-
+end loop
 end module
 
 
-module Cruise
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
