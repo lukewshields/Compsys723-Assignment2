@@ -1,0 +1,96 @@
+module CruiseStateController
+
+input On, Off;
+input Resume;
+input Set;
+input Accel : float;
+input Speed : float;
+input Break : float; 
+input QuickAccel;
+input QuickDecel;
+
+input AccelPress, BreakPress;
+input ValidSpeed, InvalidSpeed;
+
+output CruiseState : integer;
+ouput CruiseSpeed;
+
+constant minSpeed: float;
+constant maxSpeed : float;
+
+%1 = OFF, 2 = ON, 3 = STBY, 4 = Disabled
+var state := 1 : integer in
+loop 
+    emit CruiseState(state)
+    pause;
+    trap T
+
+        if (state = 1) then %replaces  present(On) since we have a var instead of signal
+            present(On) then
+                state := 2;
+                exit T;
+            end present;
+
+            present(Off or Resume or Set or Break or QuickAccel or QuickDecel) then
+                state := 1
+                exit T
+            end present;
+        end if;
+
+        if (state = 2) then
+            present(Off) then 
+                state := 1;
+                exit T;
+            end present;
+
+            present(ValidSpeed and (not AccelPress)) then    
+                state := 2;
+                exit T;
+            end present;
+
+            present(BreakPress) then
+                state := 3;
+                exit T;
+            end present;
+
+            present(AccelPress or InvalidSpeed) then
+                state := 4;
+                exit T;
+            end present;
+        end if;
+
+        if (state = 3) then
+            present(Off) then 
+                state := 1;
+                exit T;
+            end present;
+
+            present(Resume and (InvalidSpeed or AccelPress)) then
+                state := 4;
+                exit T;
+            end present;
+
+            present(Resume and not (InvalidSpeed or AccelPress)) then %could also be (ValideSpeed or !Accel)
+                state := 2;
+                exit T;
+            end present
+
+            state := 3;
+            exit T;
+        end if;
+
+        if (state = 4) then
+            present(Off) then 
+                state := 1;
+                exit T;
+            end present;
+
+            present((not On) and (not AccelPress) and ValidSpeed) then
+                state := 2;
+                exit T;
+            end present;
+        end if;
+    end trap 
+end loop
+end var
+end module
