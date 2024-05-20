@@ -1,4 +1,4 @@
-module CruiseStateController
+module CruiseStateController:
 
 input On, Off;
 input Resume;
@@ -13,7 +13,7 @@ input AccelPress, BreakPress;
 input ValidSpeed, InvalidSpeed;
 
 output CruiseState : integer;
-ouput CruiseSpeed;
+%output Cruise Speed;
 
 constant minSpeed: float;
 constant maxSpeed : float;
@@ -21,9 +21,9 @@ constant maxSpeed : float;
 %1 = OFF, 2 = ON, 3 = STBY, 4 = Disabled
 var state := 1 : integer in
 loop 
-    emit CruiseState(state)
+    emit CruiseState(state);
     pause;
-    trap T
+    trap T in
 
         if (state = 1) then %replaces  present(On) since we have a var instead of signal
             present(On) then
@@ -32,8 +32,8 @@ loop
             end present;
 
             present(Off or Resume or Set or Break or QuickAccel or QuickDecel) then
-                state := 1
-                exit T
+                state := 1;
+                exit T;
             end present;
         end if;
 
@@ -73,7 +73,7 @@ loop
             present(Resume and not (InvalidSpeed or AccelPress)) then %could also be (ValideSpeed or !Accel)
                 state := 2;
                 exit T;
-            end present
+            end present;
 
             state := 3;
             exit T;
