@@ -1,0 +1,15 @@
+module PedalDetection
+input Accel : float;
+input Decel : float;
+
+output AccelPressed;
+output DecelPressed;
+
+loop
+
+
+
+
+end loop;
+
+end module
