@@ -1,19 +1,11 @@
 module CruiseStateController:
-
 input On, Off;
 input Resume;
-input Set;
-input Accel : float;
-input Speed : float;
-input Break : float; 
-input QuickAccel;
-input QuickDecel;
 
 input AccelPress, BreakPress;
-input ValidSpeed, InvalidSpeed;
+input ValidSpeed;
 
 output CruiseState : integer;
-%output Cruise Speed;
 
 constant minSpeed: float;
 constant maxSpeed : float;
@@ -32,16 +24,14 @@ loop
     pause;
     trap T in
 
-        if (state = OFF) then %replaces  present(On) since we have a var instead of signal
+        if (state = OFF) then %replaces state = 1 since we have a constants defined
             present(On) then
                 state := 2;
                 exit T;
             end present;
-
-            present(Off or Resume or Set or Break or QuickAccel or QuickDecel) then
-                state := 1;
-                exit T;
-            end present;
+            
+            state := 1;
+            exit T;
         end if;
 
         if (state = ON) then
@@ -50,17 +40,17 @@ loop
                 exit T;
             end present;
 
-            present(ValidSpeed and (not AccelPress)) then    
-                state := 2;
-                exit T;
-            end present;
-
             present(BreakPress) then
                 state := 3;
                 exit T;
             end present;
 
-            present(AccelPress or InvalidSpeed) then
+            present(ValidSpeed and (not AccelPress)) then    
+                state := 2;
+                exit T;
+            end present;
+
+            present(AccelPress or (not ValidSpeed)) then
                 state := 4;
                 exit T;
             end present;
@@ -72,13 +62,13 @@ loop
                 exit T;
             end present;
 
-            present(Resume and (InvalidSpeed or AccelPress)) then
-                state := 4;
+            present(Resume and (ValidSpeed and not AccelPress)) then %could also be not not ValidSpeed
+                state := 2;
                 exit T;
             end present;
 
-            present(Resume and not (InvalidSpeed or AccelPress)) then %could also be (ValideSpeed or !Accel)
-                state := 2;
+            present(Resume and ((not ValidSpeed) or AccelPress)) then
+                state := 4;
                 exit T;
             end present;
 
@@ -86,13 +76,13 @@ loop
             exit T;
         end if;
 
-        if (state = DISABLED) then
+        if (state = DISABLED) then %should this state be interrupted by a break to go to stby?
             present(Off) then 
                 state := 1;
                 exit T;
             end present;
 
-            present((not On) and (not AccelPress) and ValidSpeed) then
+            present((not AccelPress) and ValidSpeed) then
                 state := 2;
                 exit T;
             end present;

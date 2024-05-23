@@ -1,15 +1,22 @@
-module PedalDetection
+module PedalDetection:
 input Accel : float;
 input Decel : float;
 
 output AccelPressed;
 output DecelPressed;
 
+constant pedalsMin = 3.0f : float;
+
 loop
+    pause;
+    if (?Accel > pedalsMin) then
+        emit AccelPressed;
+    end if;
 
+    if(?Decel > pedalsMin) then 
+        emit DecelPressed;
+    end if;
 
-
-
-end loop;
+end loop
 
 end module
