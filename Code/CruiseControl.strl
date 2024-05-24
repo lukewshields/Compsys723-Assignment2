@@ -5,7 +5,9 @@ input On, Off;
 input Resume;
 input Set;
 
-input Accel, Brake, Speed : float;
+input Accel : float;
+input Brake : float;
+input Speed : float;
 
 % System Outputs
 %output CruiseSpeed : float; not used yet
@@ -37,9 +39,9 @@ run SpeedCheck[
 ||
 run PedalDetection[
     signal Accel/Accel;
-    signal Brake/Decel;
-    signal AccelPress/AccelPressed;
-    signal DecelPress/DecelPressed
+    signal Brake/Brake;
+    signal AccelPress/AccelPress;
+    signal DecelPress/DecelPress
 ]
 
 end signal
@@ -161,23 +163,22 @@ end module
 %Detects Pedal Presses
 module PedalDetection:
 input Accel : float;
-input Decel : float;
+input Brake : float;
 
-output AccelPressed;
-output DecelPressed;
+output AccelPress;
+output DecelPress;
 
 constant pedalsMin = 3.0f : float;
 
 loop
     pause;
     if (?Accel > pedalsMin) then
-        emit AccelPressed;
+        emit AccelPress;
     end if;
 
-    if(?Decel > pedalsMin) then 
-        emit DecelPressed;
+    if(?Brake > pedalsMin) then 
+        emit DecelPress;
     end if;
 
 end loop
-
 end module
