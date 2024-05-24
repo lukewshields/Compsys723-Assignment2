@@ -1,0 +1,14 @@
+module SpeedCheck:
+input Speed : float;
+output ValidSpeed;
+
+constant speedMin = 30.0f : float;
+constant speedMax = 150.0f : float;
+
+loop 
+    pause;
+    if (?Speed < speedMax and ?Speed > speedMin) then
+        emit ValidSpeed;
+    end if;
+end loop
+end module

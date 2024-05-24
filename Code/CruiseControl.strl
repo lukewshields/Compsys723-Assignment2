@@ -1,76 +1,183 @@
 module main:
 
-% Interface Inputs
+% System Inputs
 input On, Off;
 input Resume;
 input Set;
 
-input QuickDecel, QuickAccel;
 input Accel, Brake, Speed : float;
 
-% Interface Outputs
-output CruiseSpeed : float;
-output ThrottleCmd : float;
+% System Outputs
+%output CruiseSpeed : float; not used yet
+%output ThrottleCmd : float;
+
 output CruiseState : integer; % Should later be an enum, not sure how to use enum in strl?
 
-% Declare Signals to map between each submodules
+% Declare Local Signals to map between each submodules
+signal ValidSpeed in
+signal AccelPress in
+signal DecelPress in
+
 
 %Instantiate all sub models and map inputs and outputs between
+run CruiseStateConroller[
+    signal On/On;
+    signal Off/Off;
+    signal Resume/Resume;
+    signal AccelPress/AccelPress;
+    signal DecelPress/BreakPress;
+    signal ValidSpeed/ValidSpeed;
+    signal CruiseState/CruiseState
+]
+||
+run SpeedCheck[
+    signal Speed/Speed;
+    signal ValidSpeed/ValidSpeed
+]
+||
+run PedalDetection[
+    signal Accel/Accel;
+    signal Brake/Decel;
+    signal AccelPress/AccelPressed;
+    signal DecelPress/DecelPressed
+]
 
-
-
+end signal
+end signal 
+end signal
 end module
 
-%Controls the state of the cruise controller
-module CruisStateController:
+%Controls the cruisee state of module
+module CruiseStateController:
+input On, Off;
+input Resume;
 
-loop
+input AccelPress, BreakPress;
+input ValidSpeed;
 
-end loop
-end module
+output CruiseState : integer;
 
-%Controls the Driving speed
-module DrivingControl:
+constant minSpeed: float;
+constant maxSpeed : float;
 
-loop
+%1 = OFF, 2 = ON, 3 = STBY, 4 = Disabled
 
-end loop
-end module
+constant OFF  = 1 : integer; 
+constant ON = 2 : integer;
+constant STBY = 3 : integer;
+constant DISABLED = 4 : integer;
 
-%Contorls the Cruise Speed
-module CruiseSpeed:
+var state := OFF : integer in
 
 loop 
+    emit CruiseState(state);
+    pause;
+    trap T in
 
+        if (state = OFF) then %replaces state = 1 since we have a constants defined
+            present(On) then
+                state := 2;
+                exit T;
+            end present;
+            
+            state := 1;
+            exit T;
+        end if;
+
+        if (state = ON) then
+            present(Off) then 
+                state := 1;
+                exit T;
+            end present;
+
+            present(BreakPress) then
+                state := 3;
+                exit T;
+            end present;
+
+            present(ValidSpeed and (not AccelPress)) then    
+                state := 2;
+                exit T;
+            end present;
+
+            present(AccelPress or (not ValidSpeed)) then
+                state := 4;
+                exit T;
+            end present;
+        end if;
+
+        if (state = STBY) then
+            present(Off) then 
+                state := 1;
+                exit T;
+            end present;
+
+            present(Resume and (ValidSpeed and not AccelPress)) then %could also be not not ValidSpeed
+                state := 2;
+                exit T;
+            end present;
+
+            present(Resume and ((not ValidSpeed) or AccelPress)) then
+                state := 4;
+                exit T;
+            end present;
+
+            state := 3;
+            exit T;
+        end if;
+
+        if (state = DISABLED) then %should this state be interrupted by a break to go to stby?
+            present(Off) then 
+                state := 1;
+                exit T;
+            end present;
+
+            present((not AccelPress) and ValidSpeed) then
+                state := 2;
+                exit T;
+            end present;
+        end if;
+    end trap 
+end loop
+end var
+end module
+
+%Checks for a Vaid speed
+module SpeedCheck:
+input Speed : float;
+output ValidSpeed;
+
+constant speedMin = 30.0f : float;
+constant speedMax = 150.0f : float;
+
+loop 
+    pause;
+    if (?Speed < speedMax and ?Speed > speedMin) then
+        emit ValidSpeed;
+    end if;
 end loop
 end module
 
-%Detects the pedals
+%Detects Pedal Presses
 module PedalDetection:
+input Accel : float;
+input Decel : float;
 
-loop 
+output AccelPressed;
+output DecelPressed;
+
+constant pedalsMin = 3.0f : float;
+
+loop
+    pause;
+    if (?Accel > pedalsMin) then
+        emit AccelPressed;
+    end if;
+
+    if(?Decel > pedalsMin) then 
+        emit DecelPressed;
+    end if;
 
 end loop
+
 end module
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
