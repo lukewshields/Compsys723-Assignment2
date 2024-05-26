@@ -1,54 +1,10 @@
-module main:
 
-% System Inputs
-input On1, Off1;
-input Resume1;
-input ValidSpeed1;
-input AccelPress1;
-input BreakPress1;
 
-%input Accel : float;
-%input Brake : float;
-%input Speed : float;
 
-% System Outputs
-%output CruiseSpeed : float; not used yet
-%output ThrottleCmd : float;
 
-output CruiseState1 : integer; % Should later be an enum, not sure how to use enum in strl?
 
-% Declare Local Signals to map between each submodules
-%signal ValidSpeed in
-%signal AccelPress in
-%signal BreakPress in
-signal state : integer in
 
-%Instantiate all sub models and map inputs and outputs between
-[loop 
-    present state then 
-        emit CruiseState1(?state);
-    end present;
-    pause;
-end loop]
-||
-run CruiseStateController [
-    signal On1/On;
-    signal Off1/Off;
-    signal Resume1/Resume;
-    signal AccelPress1/AccelPress;
-    signal BreakPress1/BreakPress;
-    signal ValidSpeed1/ValidSpeed;
-    signal state/CruiseState
-]
-
-%end signal
-%end signal
-%end signal 
-end signal
-end module
-
-%Sub modules
-%Controls the cruise state of module
+%Controls the cruisee state of module
 module CruiseStateController:
 input On, Off;
 input Resume;
@@ -141,4 +97,45 @@ loop
     end trap 
 end loop
 end var
+end module
+
+module main:
+
+% System Inputs
+input On, Off;
+input Resume;
+input Set;
+input AccelPress;
+input BreakPress;
+input ValidSpeed;
+
+input Accel : float;
+input Brake : float;
+input Speed : float;
+
+% System Outputs
+%output CruiseSpeed : float; not used yet
+%output ThrottleCmd : float;
+
+output CruiseState : integer; % Should later be an enum, not sure how to use enum in strl?
+
+% Declare Local Signals to map between each submodules
+%signal ValidSpeed in
+%signal AccelPress in
+%signal BreakPress in
+
+run CruiseStateConroller[
+    signal On/On;
+    signal Off/Off;
+    signal Resume/Resume;
+    signal AccelPress/AccelPress;
+    signal BreakPress/BreakPress;
+    signal ValidSpeed/ValidSpeed;
+    signal CruiseState/CruiseState
+]
+
+
+%end signal
+%end signal
+%end signal
 end module

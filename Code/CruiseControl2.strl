@@ -1,55 +1,45 @@
-module main:
-
-% System Inputs
-input On1, Off1;
+module CruiseControlMain2:
+input On1;
+input Off1;
 input Resume1;
-input ValidSpeed1;
-input AccelPress1;
-input BreakPress1;
+input Accel1 : float;
+input Break1 : float;
+input Speed1 : float;
 
-%input Accel : float;
-%input Brake : float;
-%input Speed : float;
+output CruiseState1 : integer;
 
-% System Outputs
-%output CruiseSpeed : float; not used yet
-%output ThrottleCmd : float;
-
-output CruiseState1 : integer; % Should later be an enum, not sure how to use enum in strl?
-
-% Declare Local Signals to map between each submodules
-%signal ValidSpeed in
-%signal AccelPress in
-%signal BreakPress in
-signal state : integer in
-
-%Instantiate all sub models and map inputs and outputs between
-[loop 
-    present state then 
-        emit CruiseState1(?state);
-    end present;
-    pause;
-end loop]
-||
-run CruiseStateController [
+signal ValidSpeed1 in
+signal AccelPress1 in
+signal BreakPress1 in
+run CruiseStateController2[
     signal On1/On;
     signal Off1/Off;
     signal Resume1/Resume;
     signal AccelPress1/AccelPress;
     signal BreakPress1/BreakPress;
     signal ValidSpeed1/ValidSpeed;
-    signal state/CruiseState
+    signal CruiseState1/CruiseState
+] 
+||
+run SpeedCheck[
+    signal Speed1/Speed;
+    signal ValidSpeed1/ValidSpeed
 ]
-
-%end signal
-%end signal
-%end signal 
+|| 
+run PedalDetection[
+    signal Accel1/Accel;
+    signal Break1/Decel;
+    signal AccelPress1/AccelPressed;
+    signal BreakPress1/DecelPressed
+]
+end signal
+end signal
 end signal
 end module
 
-%Sub modules
-%Controls the cruise state of module
-module CruiseStateController:
+
+%sub modules
+module CruiseStateController2:
 input On, Off;
 input Resume;
 
@@ -113,12 +103,12 @@ loop
                 exit T;
             end present;
 
-            present(Resume and (ValidSpeed and not AccelPress)) then %could also be not not ValidSpeed
+            present(Resume and ValidSpeed and not AccelPress and not BreakPress) then %could also be not not ValidSpeed
                 state := 2;
                 exit T;
             end present;
 
-            present(Resume and ((not ValidSpeed) or AccelPress)) then
+            present(Resume and not BreakPress and ((not ValidSpeed) or AccelPress)) then
                 state := 4;
                 exit T;
             end present;
@@ -141,4 +131,42 @@ loop
     end trap 
 end loop
 end var
+end module
+
+module SpeedCheck:
+input Speed : float;
+output ValidSpeed;
+
+constant speedMin = 30.0f : float;
+constant speedMax = 150.0f : float;
+
+loop 
+    pause;
+    if (?Speed < speedMax and ?Speed > speedMin) then
+        emit ValidSpeed;
+    end if;
+end loop
+end module
+
+module PedalDetection:
+input Accel : float;
+input Decel : float;
+
+output AccelPressed;
+output DecelPressed;
+
+constant pedalsMin = 3.0f : float;
+
+loop
+    pause;
+    if (?Accel > pedalsMin) then
+        emit AccelPressed;
+    end if;
+
+    if(?Decel > pedalsMin) then 
+        emit DecelPressed;
+    end if;
+
+end loop
+
 end module
