@@ -11,7 +11,7 @@ output CruiseState1 : integer;
 signal ValidSpeed1 in
 signal AccelPress1 in
 signal BreakPress1 in
-run CruiseStateController2[
+run CruiseStateController[
     signal On1/On;
     signal Off1/Off;
     signal Resume1/Resume;
@@ -39,7 +39,7 @@ end module
 
 
 %sub modules
-module CruiseStateController2:
+module CruiseStateController:
 input On, Off;
 input Resume;
 
