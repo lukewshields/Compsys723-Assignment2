@@ -1,0 +1,58 @@
+module CarControl:
+
+input CruiseState : integer;
+input Speed : float;
+input CruiseSpeed : float;
+input Accel : float;
+
+output ThrottleCmd : float;
+% import C functions
+function regulateThrottle(boolean, float, float) : float;
+
+% constants of CruiseState Values (input)
+constant OFF = 1 : integer; 
+constant ON = 2 : integer;
+constant STBY = 3 : integer;
+constant DISABLED = 4 : integer;
+
+% FSM states of CarDrivingControl
+constant STATE_OFF = 0 : integer;
+constant STATE_ON_FIRST_TIME = 1 : integer;
+constant STATE_ON_ONGOING = 2 : integer;
+
+var state := STATE_OFF : integer in
+
+
+
+% Main logic 
+loop
+    % state transition stuff
+    if (state = STATE_OFF) then
+            if (?CruiseState = ON) then
+                state := STATE_ON_FIRST_TIME;
+            end if;
+    elsif (state = STATE_ON_FIRST_TIME) then
+            if (?CruiseState = OFF or ?CruiseState = STBY or ?CruiseState = DISABLED) then
+                state := STATE_OFF;
+            else
+                state := STATE_ON_ONGOING;
+            end if;
+    elsif (state = STATE_ON_ONGOING) then
+            if (?CruiseState = OFF or ?CruiseState = STBY or ?CruiseState = DISABLED) then
+                state := STATE_OFF;
+            end if;
+    end if;
+
+    % State actions
+    if (state = STATE_OFF) then
+        emit ThrottleCmd(?Accel);
+    elsif (state = STATE_ON_FIRST_TIME) then
+        emit ThrottleCmd(regulateThrottle(true, ?CruiseSpeed, ?Speed));
+    elsif (state = STATE_ON_ONGOING) then
+        emit ThrottleCmd(regulateThrottle(false, ?CruiseSpeed, ?Speed));
+    end if;
+    pause;
+end loop
+end var
+end module
+

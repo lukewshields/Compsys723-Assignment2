@@ -183,7 +183,7 @@ constant pedalsMin = 3.0f : float;
 
 loop
     pause;
-    if (?Accel >= pedalsMin) then
+    if (?Accel >= pedalsMin) then 
         emit AccelPressed;
     end if;
 

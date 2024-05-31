@@ -22,13 +22,10 @@ loop
             setToCruiseSpeed := 0.0f;
         else % CC enabled
             present(Set or On) then % could cause errors because On should not function same as set?
-                if (?Speed < SpeedMin or ?Speed > SpeedMax) then
-                    if (?Speed < SpeedMin) then % this is gross gotta be a better way around it but no else if statements in esterel??
-                        setToCruiseSpeed := SpeedMin;
-                    end if;
-                    if (?Speed > SpeedMax) then
-                        setToCruiseSpeed := SpeedMax;
-                    end if;
+                if (?Speed < SpeedMin) then
+                    setToCruiseSpeed := SpeedMin;
+                elsif (?Speed > SpeedMax) then
+                    setToCruiseSpeed := SpeedMax;
                 else 
                     setToCruiseSpeed := ?Speed;
                 end if;
