@@ -5,8 +5,13 @@ input Resume1;
 input Accel1 : float;
 input Break1 : float;
 input Speed1 : float;
+input QuickAccel1;
+input QuickDecel1;
+input Set1;
+
 
 output CruiseState1 : integer;
+output CruiseSpeed1 : float;
 
 signal ValidSpeed1 in
 signal AccelPress1 in
@@ -31,6 +36,16 @@ run PedalDetection[
     signal Break1/Decel;
     signal AccelPress1/AccelPressed;
     signal BreakPress1/DecelPressed
+]
+|| 
+run SpeedManager[
+    signal CruiseState1/CruiseState;
+    signal QuickDecel1/QuickDecel;
+    signal QuickAccel1/QuickAccel;
+    signal On1/On;
+    signal Set1/Set;
+    signal Speed1/Speed;
+    signal CruiseSpeed1/CruiseSpeed
 ]
 end signal
 end signal
@@ -137,12 +152,12 @@ module SpeedCheck:
 input Speed : float;
 output ValidSpeed;
 
-constant speedMin = 30.0f : float;
-constant speedMax = 150.0f : float;
+constant MinSpeed = 30.0f : float;
+constant MaxSpeed = 150.0f : float;
 
 loop 
     pause;
-    if (?Speed < speedMax and ?Speed > speedMin) then
+    if (?Speed < MaxSpeed and ?Speed > MinSpeed) then
         emit ValidSpeed;
     end if;
 end loop
@@ -169,4 +184,64 @@ loop
 
 end loop
 
+end module
+
+
+module SpeedManager:
+
+input CruiseState : integer;
+input QuickDecel, QuickAccel;
+input On;
+input Set;
+input Speed : float;
+
+output CruiseSpeed : float;
+
+constant MaxSpeed = 150.0f : float;
+constant MinSpeed = 30.0f : float;
+constant IncSpeed = 2.5f : float;
+
+
+var setToCruiseSpeed := 0.0f : float in
+loop
+    emit CruiseSpeed(setToCruiseSpeed);
+    pause;
+    trap T in 
+        if (?CruiseState = 1) then
+            setToCruiseSpeed := 0.0f;
+        else % CC enabled
+            present(Set or On) then % could cause errors because On should not function same as set?
+                if (?Speed < MinSpeed or ?Speed > MaxSpeed) then
+                    if (?Speed < MinSpeed) then % this is gross gotta be a better way around it but no else if statements in esterel??
+                        setToCruiseSpeed := MinSpeed;
+                    end if;
+                    if (?Speed > MaxSpeed) then
+                        setToCruiseSpeed := MaxSpeed;
+                    end if;
+                else 
+                    setToCruiseSpeed := ?Speed;
+                end if;
+            end present;
+
+            present(QuickAccel) then
+                if (setToCruiseSpeed + IncSpeed <= MaxSpeed) then
+                    setToCruiseSpeed := setToCruiseSpeed + IncSpeed;
+                else 
+                    setToCruiseSpeed := MaxSpeed;
+                end if;
+                exit T;
+            end present;
+
+            present(QuickDecel) then
+                if (setToCruiseSpeed - IncSpeed >= MinSpeed) then
+                    setToCruiseSpeed := setToCruiseSpeed - IncSpeed;
+                else 
+                    setToCruiseSpeed := MinSpeed;
+                end if;
+                exit T;
+            end present;
+        end if;
+    end trap
+end loop
+end var
 end module
